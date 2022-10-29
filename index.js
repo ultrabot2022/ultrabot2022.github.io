@@ -92,15 +92,15 @@ export default e => {
 
           dropManager.createDropApp({
             type: 'major',
-            start_url: 'https://webaverse.github.io/axe/index.js',
+            start_url: 'https://webaverse.github.io/uzi/index.js',
             components: [
               {
                 key: 'appName',
-                value: 'Axe',
+                value: 'Uzi',
               },
               {
                 key: 'appUrl',
-                value: 'https://webaverse.github.io/axe/index.js',
+                value: 'https://webaverse.github.io/uzi/index.js',
               },
             ],
             position: app.position.clone()
