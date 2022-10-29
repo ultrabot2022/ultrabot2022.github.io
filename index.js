@@ -92,15 +92,15 @@ export default e => {
 
           dropManager.createDropApp({
             type: 'major',
-            start_url: 'https://webaverse.github.io/machine-gun/index.js',
+            start_url: 'https://webaverse.github.io/cartoon-sword/index.js',
             components: [
               {
                 key: 'appName',
-                value: 'Machine Gun',
+                value: 'Sword',
               },
               {
                 key: 'appUrl',
-                value: 'https://webaverse.github.io/machine-gun/index.js',
+                value: 'https://webaverse.github.io/cartoon-sword/index.js',
               },
             ],
             position: app.position.clone()
