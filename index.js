@@ -1,12 +1,9 @@
 import * as THREE from 'three';
 // import easing from './easing.js';
 import metaversefile from 'metaversefile';
-
-const {useApp, useFrame, useActivate, useLoaders, usePhysics, useDropManager, useCleanup} = metaversefile;
+const {useApp, useFrame, useActivate, useLoaders, usePhysics, addTrackedApp, useDropManager, useDefaultModules, useCleanup} = metaversefile;
 
 const baseUrl = import.meta.url.replace(/(\/)[^\/\\]*$/, '$1');
-
-const dropsUrl = 'https://webaverse.github.io/asset-registry/drops.json';
 
 export default e => {
   const app = useApp();
@@ -25,7 +22,8 @@ export default e => {
   });
 
   let live = true;
-  const physicsIds = [];
+  let reactApp = null;
+  let physicsIds = [];
   e.waitUntil((async () => {
     const u = `${baseUrl}chest.glb`;
     let o = await new Promise((accept, reject) => {
@@ -40,16 +38,51 @@ export default e => {
     o = o.scene;
     app.add(o);
 
+    //
+
+    {
+      const u = `${baseUrl}inventory-banner.react`;
+      reactApp = await metaversefile.createAppAsync({
+        start_url: u,
+      });
+      if (!live) {
+        reactApp.destroy();
+        return;
+      }
+      reactApp.position.y = 1.2;
+      app.add(reactApp);
+      reactApp.updateMatrixWorld();
+    }
+
+    //
+    
+    /* const dropObject = new THREE.Object3D();
+    dropObject.position.y = 0.5;
+    app.add(dropObject); */
+
+    // app.updateMatrixWorld();
+
+    /* let baseMesh = null;
+    o.traverse(o => {
+      if (!baseMesh && o.isMesh && /base_container/i.test(o.name)) {
+        baseMesh = o;
+      }
+    }); */
     const physicsId = physics.addGeometry(o);
     physicsIds.push(physicsId);
-
+    
     const mixer = new THREE.AnimationMixer(o);
     const actions = animations.map(animationClip => mixer.clipAction(animationClip));
-
+    /* let maxDuration = -Infinity;
+    for (const animation of animations) {
+      maxDuration = Math.max(maxDuration, animation.duration);
+    } */
     const startOffset = 1;
     const endOffset = 2;
     const dropOffset = 1;
     activateCb = () => {
+      // console.log('got activate');
+      
       for (const action of actions) {
         action.reset();
         action.play();
@@ -63,56 +96,70 @@ export default e => {
         const now = Date.now();
         const timeDiff = (now - lastUpdateTime) / 1000;
         lastUpdateTime = now;
-
+        
         timeAcc += timeDiff;
         if (!dropped && timeAcc >= dropOffset) {
-          // fetch(dropsUrl).then(res => res.json()).then(drops => {
-          //   const drop = drops[Math.floor(Math.random() * drops.length)];
-
-          //   dropManager.createDropApp({
-          //     type: 'major',
-          //     start_url: drop.src,
-          //     components: [
-          //       {
-          //         key: 'appName',
-          //         value: drop.name,
-          //       },
-          //       {
-          //         key: 'appUrl',
-          //         value: drop.src,
-          //       },
-          //     ],
-          //     position: app.position.clone()
-          //       .add(new THREE.Vector3(0, 0.7, 0)),
-          //     quaternion: app.quaternion,
-          //     scale: app.scale,
-          //   });
-          // });
-
+          const {moduleUrls} = useDefaultModules();
+          
+          // const r = () => (-0.5+Math.random())*2;
+          /* const components = [
+            {
+              key: 'drop',
+              value: {
+                velocity: new THREE.Vector3(r(), 1+Math.random(), r())
+                  .normalize()
+                  .multiplyScalar(5)
+                  .toArray(),
+                angularVelocity: new THREE.Vector3(0, 0.001, 0)
+                  .toArray(),
+              },
+            },
+          ]; */
+          
+          // console.log('got loot components', srcUrl, components);
+          
+          // const p = addTrackedApp(
+          //   moduleUrls.silk,
+          //   app.position.clone()
+          //     .add(new THREE.Vector3(0, 0.7, 0)),
+          //   app.quaternion,
+          //   app.scale,
+          //   components
+          // );
+          
+          const dropManager = useDropManager();
 
           dropManager.createDropApp({
+            // type: 'minor',
             type: 'major',
-            start_url: 'https://webaverse.github.io/uzi/index.js',
+            // start_url: moduleUrls.silk,
+            start_url: 'https://webaverse.github.io/axe/index.js',
             components: [
               {
                 key: 'appName',
-                value: 'Uzi',
+                // value: 'Silk'
+                value: 'Axe'
               },
               {
                 key: 'appUrl',
-                value: 'https://webaverse.github.io/uzi/index.js',
-              },
+                // value: moduleUrls.silk
+                value: 'https://webaverse.github.io/axe/index.js'
+              }
             ],
             position: app.position.clone()
               .add(new THREE.Vector3(0, 0.7, 0)),
             quaternion: app.quaternion,
-            scale: app.scale,
+            scale: app.scale
           });
-
 
           dropped = true;
         }
         if (timeAcc >= endOffset) {
+          // mixer.stopAllAction();
+          /* timeAcc = 0;
+          for (const action of actions) {
+            action.time = 0;
+          } */
           frameCb = null;
         } else {
           mixer.update(timeDiff);
@@ -122,7 +169,7 @@ export default e => {
       frameCb = animate;
     };
   })());
-
+  
   useCleanup(() => {
     live = false;
     reactApp && reactApp.destroy();
